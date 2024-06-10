@@ -7,6 +7,8 @@ import pandas as pd
 from selectolax.parser import HTMLParser
 import re
 import json
+from fake_useragent import UserAgent
+import random
 
 def getModel(serial):
     # browser = Browser('edge', headless=True)
@@ -35,14 +37,34 @@ def getModel(serial):
 
     # file = open("temp.txt", 'w', encoding="utf-8")
 
-    response = requests.get(f'https://pcsupport.lenovo.com/us/en/api/v4/mse/getproducts?productId={serial}')
-    info = response.json()[0]
-    response = requests.get(f'https://pcsupport.lenovo.com/us/en/products/{info['Id']}/warranty')
+    free_us_proxies = [
+        {'http': 'http://104.238.111.107:3230', 'https': 'https://104.238.111.107:3230'},
+        {'http': 'http://104.225.220.233:80', 'https': 'https://104.225.220.233:80'},
+        {'http': 'http://137.184.6.203:8081', 'https': 'https://137.184.6.203:8081'},
+        {'http': 'http://12.186.205.123:80', 'https': 'https://12.186.205.123:80'},
+        {'http': 'http://100.1.53.24:5678', 'https': 'https://100.1.53.24:5678'},
+        {'http': 'http://130.245.128.193:8080', 'https': 'https://130.245.128.193:8080'},
+        {'http': 'http://128.199.5.121:21044', 'https': 'https://128.199.5.121:21044'},
+        {'http': 'http://154.16.146.45:80', 'https': 'https://154.16.146.45:80'},
+        {'http': 'http://12.176.231.147:80', 'https': 'https://12.176.231.147:80'},
+        {'http': 'http://142.54.232.6:4145', 'https': 'https://142.54.232.6:4145'},
+        {'http': 'http://148.72.140.24:30127', 'https': 'https://148.72.140.24:30127'},
+        {'http': 'http://130.58.218.30:80', 'https': 'https://130.58.218.30:80'},
+        {'http': 'http://103.170.155.15:3128', 'https': 'https://103.170.155.15:3128'},
+        {'http': 'http://104.200.135.46:4145', 'https': 'https://104.200.135.46:4145'},
+        {'http': 'http://107.180.90.88:4756', 'https': 'https://107.180.90.88:4756'},
+        # ... additional proxies would be listed here
+    ]
 
-    parser = HTMLParser(response.text)
+
+    ua = UserAgent()
+
+    response = requests.get(f'https://pcsupport.lenovo.com/us/en/api/v4/mse/getproducts?productId={serial}', headers={'User-Agent': ua.random})
+    info = response.json()[0]
+    response = requests.get(f'https://pcsupport.lenovo.com/us/en/products/{info['Id']}/warranty', headers={'User-Agent': ua.random})
 
     variable_pattern = re.compile(r'var\s+ds_warranties\s+=\s+(.*?);') # regex
-    match = variable_pattern.search(parser.body.html)
+    match = variable_pattern.search(response.text)
 
     if match:
         info = match.group(1).split('||')[1].strip()
